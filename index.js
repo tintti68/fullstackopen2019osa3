@@ -7,6 +7,7 @@ morgan.token('type', function (req, res) { return JSON.stringify(req.headers['co
 app.use(morgan({format: 'POST body length in bytes :req[Content-Length]', immediate: true}))
 app.use(bodyParser.json())
 app.use(cors())
+app.use(express.static(path.join(__dirname, 'build')))
 
 let tiedot = [
     {
