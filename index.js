@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 var bodyParser = require('body-parser');
 const cors = require('cors')
@@ -9,28 +10,8 @@ app.use(bodyParser.json())
 app.use(cors())
 app.use(express.static(__dirname + '/build'))
 
-let tiedot = [
-    {
-      id: 1,
-      name: 'Arto Hellas',
-      number: '043-1234543',
-    },
-    {
-        id: 2,
-        name: 'Arto Järvine',
-        number: '043-12341212',
-      },
-      {
-        id: 3,
-        name: 'Lea Kutvonen',
-        number: '0400-24667345',
-      },
-      {
-        id: 4,
-        name: 'Martti Tienari',
-        number: '09-7842321',
-      }
-  ]
+const Luettelo = require('./models/phonebook')
+
   app.get('/', (req, res) => {
     res.send('<h1>Täällä ei mitään vielä</h1>')
   })
@@ -46,14 +27,17 @@ let tiedot = [
   })
 
   app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const kontakti = tiedot.find(tieto => tieto.id === id)
+    // const id = Number(req.params.id)
+    // const kontakti = tiedot.find(tieto => tieto.id === id)
     
-    if (kontakti) {
-      res.json(kontakti)
-    } else {
-      res.status(404).end()
-    }
+    // if (kontakti) {
+    //   res.json(kontakti)
+    // } else {
+    //   res.status(404).end()
+    // }
+    Luettelo.findById(req.params.id).then(tieto => {
+      res.json(tieto.toJSON())
+    })
   })
 
   app.delete('/api/persons/:id', (req, res) => {
@@ -77,19 +61,22 @@ let tiedot = [
       })
     }
 
-    const vanhaTieto = tiedot.filter(tieto => tieto.name === body.name)
-    if (vanhaTieto.length > 0) {
-      return res.status(400).json({ 
-        error: 'name is already listed' 
-      })
-    }
-    const tieto = {
+    // const vanhaTieto = tiedot.filter(tieto => tieto.name === body.name)
+    // if (vanhaTieto.length > 0) {
+    //   return res.status(400).json({ 
+    //     error: 'name is already listed' 
+    //   })
+    // }
+    const tieto = new Luettelo({
       name: body.name,
       number: body.number,
       id: Math.floor(Math.random() * Math.floor(9999999)) +1,
-    }
-    tiedot = tiedot.concat(tieto) 
-    res.json(tieto)
+    })
+
+    tiedot.save().then(saveduser => {
+      res.json(saveduser.toJSON())
+    })
+    
   })
   
   const PORT = process.env.PORT || 3001
