@@ -23,28 +23,28 @@ const Luettelo = require('./models/phonebook')
   })
 
   app.get('/api/persons', (req, res) => {
-    res.json(tiedot)
+    Luettelo.find({}).then(result => {
+        res.json(result)
+    })
+    
   })
 
   app.get('/api/persons/:id', (req, res) => {
-    // const id = Number(req.params.id)
-    // const kontakti = tiedot.find(tieto => tieto.id === id)
-    
-    // if (kontakti) {
-    //   res.json(kontakti)
-    // } else {
-    //   res.status(404).end()
-    // }
     Luettelo.findById(req.params.id).then(tieto => {
       res.json(tieto.toJSON())
     })
   })
 
   app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    tiedot = tiedot.filter(tieto => tieto.id !== id)
+    Luettelo.findByIdAndRemove(req.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(error => {
+      console.log(error);
+      response.status(404).end()
+    })
   
-    res.status(204).end()
   })
 
   app.post('/api/persons', (req, res) => {
@@ -61,19 +61,13 @@ const Luettelo = require('./models/phonebook')
       })
     }
 
-    // const vanhaTieto = tiedot.filter(tieto => tieto.name === body.name)
-    // if (vanhaTieto.length > 0) {
-    //   return res.status(400).json({ 
-    //     error: 'name is already listed' 
-    //   })
-    // }
     const tieto = new Luettelo({
       name: body.name,
       number: body.number,
       id: Math.floor(Math.random() * Math.floor(9999999)) +1,
     })
 
-    tiedot.save().then(saveduser => {
+    tieto.save().then(saveduser => {
       res.json(saveduser.toJSON())
     })
     
