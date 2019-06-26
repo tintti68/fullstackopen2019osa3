@@ -17,9 +17,11 @@ const Luettelo = require('./models/phonebook')
   })
   
   app.get('/info', (req, res) => {
-    const koko = tiedot.length 
+
     var now = new Date() 
-    res.send('<div>Puhelinluettelossa ' + koko + ' henkilön tiedot</div><div>' + now + '</div>')
+    Luettelo.find({}).countDocuments().then((n) => {
+      res.send('<div>Puhelinluettelossa ' + n + ' henkilön tiedot</div><div>' + now + '</div>')
+    });
   })
 
   app.get('/api/persons', (req, res) => {
@@ -29,21 +31,38 @@ const Luettelo = require('./models/phonebook')
     
   })
 
-  app.get('/api/persons/:id', (req, res) => {
+  app.get('/api/persons/:id', (req, res, next) => {
     Luettelo.findById(req.params.id).then(tieto => {
-      res.json(tieto.toJSON())
+      if(tieto){
+        res.json(tieto.toJSON())
+      } else {
+        res.status(404).end() 
+      }
     })
+    .catch(error => next(error))
   })
 
-  app.delete('/api/persons/:id', (req, res) => {
+  app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+  
+    const tieto = {
+      name: body.name,
+      number: body.number,
+    }
+  
+    Luettelo.findByIdAndUpdate(req.params.id, tieto, { new: true })
+      .then(updatedTieto => {
+        res.json(updatedTieto.toJSON())
+      })
+      .catch(error => next(error))
+  })
+
+  app.delete('/api/persons/:id', (req, res, next) => {
     Luettelo.findByIdAndRemove(req.params.id)
     .then(result => {
       res.status(204).end()
     })
-    .catch(error => {
-      console.log(error);
-      response.status(404).end()
-    })
+    .catch(error => next(error))
   
   })
 
@@ -73,6 +92,18 @@ const Luettelo = require('./models/phonebook')
     
   })
   
+  const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError' && error.kind == 'ObjectId') {
+      return response.status(400).send({ error: 'malformatted id' })
+    }
+  
+    next(error)
+  }
+  
+  app.use(errorHandler)
+
   const PORT = process.env.PORT || 3001
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
