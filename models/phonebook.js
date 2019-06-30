@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-
+var uniqueValidator = require('mongoose-unique-validator');
+mongoose.set('useFindAndModify', false)
 const url = process.env.MONGODB_URI
 console.log('connecting to', url)
 mongoose.connect(url, { useNewUrlParser: true })
@@ -10,9 +11,11 @@ mongoose.connect(url, { useNewUrlParser: true })
           })
 
 const bookSchema = new mongoose.Schema({
-    name: String,
-    number: String,
+    name: { type: String, minlength: 3, required: true, unique: true },
+    number: { type: String, minlength: 8, required: true, unique: true },
 })
+
+bookSchema.plugin(uniqueValidator)
 
 bookSchema.set('toJSON', {
     transform: (document, returnedObject) => {

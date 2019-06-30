@@ -17,39 +17,62 @@ const Luettelo = require('./models/phonebook')
   })
   
   app.get('/info', (req, res) => {
-    const koko = tiedot.length 
+
     var now = new Date() 
-    res.send('<div>Puhelinluettelossa ' + koko + ' henkilön tiedot</div><div>' + now + '</div>')
+    Luettelo.find({}).countDocuments().then((n) => {
+      res.send('<div>Puhelinluettelossa ' + n + ' henkilön tiedot</div><div>' + now + '</div>')
+    });
   })
 
   app.get('/api/persons', (req, res) => {
+<<<<<<< HEAD
     Luettelo.find({}).then(tieto => {
       res.json(tieto)
     })
-  })
-
-  app.get('/api/persons/:id', (req, res) => {
-    // const id = Number(req.params.id)
-    // const kontakti = tiedot.find(tieto => tieto.id === id)
-    
-    // if (kontakti) {
-    //   res.json(kontakti)
-    // } else {
-    //   res.status(404).end()
-    // }
-    Luettelo.findById(req.params.id).then(tieto => {
-      res.json(tieto.toJSON())
+=======
+    Luettelo.find({}).then(result => {
+        res.json(result)
     })
+    
+>>>>>>> c1f9b59abc3fe70f3840ffd7d2b55f2d98934acf
   })
 
-  app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    tiedot = tiedot.filter(tieto => tieto.id !== id)
+  app.get('/api/persons/:id', (req, res, next) => {
+    Luettelo.findById(req.params.id).then(tieto => {
+      if(tieto){
+        res.json(tieto.toJSON())
+      } else {
+        res.status(404).end() 
+      }
+    })
+    .catch(error => next(error))
+  })
+
+  app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
   
-    res.status(204).end()
+    const tieto = {
+      name: body.name,
+      number: body.number,
+    }
+  
+    Luettelo.findByIdAndUpdate(req.params.id, tieto, { new: true })
+      .then(updatedTieto => {
+        res.json(updatedTieto.toJSON())
+      })
+      .catch(error => next(error))
   })
 
-  app.post('/api/persons', (req, res) => {
+  app.delete('/api/persons/:id', (req, res, next) => {
+    Luettelo.findByIdAndRemove(req.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(error => next(error))
+  
+  })
+
+  app.post('/api/persons', (req, res, next) => {
     const body = req.body
     if (!body.name) {
       return res.status(400).json({ 
@@ -63,24 +86,33 @@ const Luettelo = require('./models/phonebook')
       })
     }
 
-    // const vanhaTieto = tiedot.filter(tieto => tieto.name === body.name)
-    // if (vanhaTieto.length > 0) {
-    //   return res.status(400).json({ 
-    //     error: 'name is already listed' 
-    //   })
-    // }
     const tieto = new Luettelo({
       name: body.name,
       number: body.number,
       id: Math.floor(Math.random() * Math.floor(9999999)) +1,
     })
 
-    tiedot.save().then(saveduser => {
+    tieto.save().then(saveduser => {
       res.json(saveduser.toJSON())
     })
+    .catch(error => next(error))
     
   })
   
+  const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError' && error.kind == 'ObjectId') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+      return response.status(400).json({ error: error.message })
+    }
+  
+    next(error)
+  }
+  
+  app.use(errorHandler)
+
   const PORT = process.env.PORT || 3001
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
