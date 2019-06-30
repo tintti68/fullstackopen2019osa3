@@ -25,12 +25,7 @@ const Luettelo = require('./models/phonebook')
   })
 
   app.get('/api/persons', (req, res) => {
-<<<<<<< HEAD
-    Luettelo.find({}).then(tieto => {
-      res.json(tieto)
-    })
-=======
-    Luettelo.find({}).then(result => {
+        Luettelo.find({}).then(result => {
         res.json(result)
     })
     
