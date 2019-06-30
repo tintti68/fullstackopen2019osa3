@@ -23,7 +23,9 @@ const Luettelo = require('./models/phonebook')
   })
 
   app.get('/api/persons', (req, res) => {
-    res.json(tiedot)
+    Luettelo.find({}).then(tieto => {
+      res.json(tieto)
+    })
   })
 
   app.get('/api/persons/:id', (req, res) => {
