@@ -66,7 +66,7 @@ const Luettelo = require('./models/phonebook')
   
   })
 
-  app.post('/api/persons', (req, res) => {
+  app.post('/api/persons', (req, res, next) => {
     const body = req.body
     if (!body.name) {
       return res.status(400).json({ 
@@ -89,6 +89,7 @@ const Luettelo = require('./models/phonebook')
     tieto.save().then(saveduser => {
       res.json(saveduser.toJSON())
     })
+    .catch(error => next(error))
     
   })
   
@@ -97,6 +98,8 @@ const Luettelo = require('./models/phonebook')
   
     if (error.name === 'CastError' && error.kind == 'ObjectId') {
       return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+      return response.status(400).json({ error: error.message })
     }
   
     next(error)
