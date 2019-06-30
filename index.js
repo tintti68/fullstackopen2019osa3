@@ -27,8 +27,8 @@ const Luettelo = require('./models/phonebook')
   app.get('/api/persons', (req, res) => {
         Luettelo.find({}).then(result => {
         res.json(result)
-    })
-  })
+        })
+      })
 
   app.get('/api/persons/:id', (req, res, next) => {
     Luettelo.findById(req.params.id).then(tieto => {
